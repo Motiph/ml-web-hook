@@ -12,7 +12,7 @@ SECRET_KEY = env("SECRET_KEY")
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["ciapml.westus2.cloudapp.azure.com"]
+ALLOWED_HOSTS = ['app', 'ciapml.westus2.cloudapp.azure.com']
 
 
 INSTALLED_APPS = [
