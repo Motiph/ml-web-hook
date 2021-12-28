@@ -16,7 +16,6 @@ ALLOWED_HOSTS = ['app', 'ciapml.westus2.cloudapp.azure.com']
 
 
 INSTALLED_APPS = [
-    'bootstrap_admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -62,8 +61,12 @@ WSGI_APPLICATION = 'webhookml.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'webhookml',
+	'USER': 'edwyn',
+	'PASSWORD': '$Solecismo1',
+	'HOST': 'localhost',
+	'PORT': '',
     }
 }
 
