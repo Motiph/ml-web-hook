@@ -9,7 +9,9 @@ from .views import (acme_webhook,
     UpdateItemMercadoLibre,
     CreateItemMercadoLibre,
     ShowNewOrders,
-    DocumentUpload)
+    DocumentUpload,
+    CheckStock,
+    ReadExcelToAdd)
 from django.conf.urls import url
 
 urlpatterns = [
@@ -22,5 +24,7 @@ urlpatterns = [
     path(r'showorders/',ShowOrders.as_view()),
     path(r'updateitem/',UpdateItemMercadoLibre.as_view()),
     path(r'createitem',CreateItemMercadoLibre.as_view()),
-    path(r'upload/',DocumentUpload.as_view())
+    path(r'upload/',DocumentUpload.as_view()),
+    path(r'check/',CheckStock.as_view()),
+    path(r'readexcel/',ReadExcelToAdd.as_view())
     ]

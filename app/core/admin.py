@@ -4,7 +4,7 @@ from django.contrib import admin
 from .models import (AcmeWebhookMessage,
 UserMercadoLibre,TokenMercadoLibre,
 ItemSellMercadoLibre,OrderItemsMercadoLibre,
-DocumentItems)
+DocumentItems,DictionaryItems)
 
 # Register your models here.
 admin.site.register(AcmeWebhookMessage)
@@ -12,6 +12,12 @@ admin.site.register(UserMercadoLibre)
 admin.site.register(TokenMercadoLibre)
 admin.site.register(ItemSellMercadoLibre)
 admin.site.register(OrderItemsMercadoLibre)
+
+
+@admin.register(DictionaryItems)
+class DocumentItemsAdmin(admin.ModelAdmin):
+    list_display = ("idMercadoLibre","long_brand","number_part", "model")
+    search_fields = ("number_part", )
 
 @admin.register(DocumentItems)
 class DocumentItemsAdmin(admin.ModelAdmin):

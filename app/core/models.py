@@ -117,3 +117,16 @@ class DocumentItems(models.Model):
         else:
             self.updated_at = timezone.now()
             return super(DocumentItems,self).save(*args, **kwargs)
+
+
+class DictionaryItems(models.Model):
+    idMercadoLibre = models.CharField(max_length=200, verbose_name="ID de Mercado Libre")
+    long_brand = models.CharField(max_length=200, verbose_name="Marca (Nombre Largo)")
+    short_brand = models.CharField(max_length=200, verbose_name="Marca (Nombre corto)")
+    number_part = models.CharField(max_length=200, blank=True, null=True,verbose_name="Número de parte")
+    model = models.CharField(max_length=200, blank=True, null=True,verbose_name="Modelo")
+    stock = models.IntegerField(verbose_name="Stock disponible")
+    price = models.DecimalField(max_digits=9, decimal_places=2, default=0.01,verbose_name="Precio")
+    
+    def __str__(self):
+        return str(self.idMercadoLibre)

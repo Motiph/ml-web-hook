@@ -22,9 +22,11 @@ import rest_framework_xml
 from .models import (AcmeWebhookMessage,
 GetUserML,TokenMercadoLibre,
 GetTokenML,ItemSellMercadoLibre,
-OrderItemsMercadoLibre,DocumentItems)
+OrderItemsMercadoLibre,DocumentItems,DictionaryItems)
 
 from .xml import XMLCustomRenderer,makexml
+
+from .excel import getItemFromMLAPI,makeexcel,readexcel
 
 #method to change token after 3 hours having been created
 def changeToken():
@@ -583,3 +585,32 @@ class DocumentUpload(APIView):
         DocumentItems(**data).save()
         return Response(status=status.HTTP_201_CREATED)
 
+def checkchange(request):
+    itemchanged = []
+    for item in request.data.get('inv',None):
+        try:
+            print(item['part'])
+            foundItem = DictionaryItems.objects.get(long_brand=item['lineName'],number_part=item['part'])
+            if (foundItem.stock != item['instk']):
+                itemchanged.append(getItemFromMLAPI(foundItem,item))
+        except DictionaryItems.DoesNotExist:
+            try:
+                foundItem = DictionaryItems.objects.get(long_brand=item['lineName'],model=item['part'])
+                if (foundItem.stock != item['instk']):
+                    itemchanged.append(getItemFromMLAPI(foundItem,item))
+            except DictionaryItems.DoesNotExist:
+                print("No encontrado")
+            except Exception as excep:
+                print("error en check change"+excep)
+    makeexcel(itemchanged)
+
+class CheckStock(APIView):
+    def post(self, request,format=None):
+        changeToken()
+        checkchange(request)
+        return Response(status=status.HTTP_200_OK)
+
+class ReadExcelToAdd(APIView):
+    def get(self, request, format=None):
+        readexcel()
+        return Response(status=status.HTTP_200_OK)

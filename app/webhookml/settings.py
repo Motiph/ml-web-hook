@@ -12,7 +12,7 @@ SECRET_KEY = env("SECRET_KEY")
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['app', 'ciapml.westus2.cloudapp.azure.com']
+ALLOWED_HOSTS = ['app', 'ciapml.westus2.cloudapp.azure.com','localhost']
 
 
 INSTALLED_APPS = [
@@ -63,8 +63,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'webhookml',
-	'USER': 'edwyn',
-	'PASSWORD': '$Solecismo1',
+	'USER': env("USER"),
+	'PASSWORD': env("PASSWORD"),
 	'HOST': 'localhost',
 	'PORT': '',
     }
