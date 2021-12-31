@@ -365,6 +365,11 @@ listRowExcel = (
     "Set"
     )
 
+def UpdateItem(item,newData):
+        item.stock = newData['instk']
+        item.price = newData['cost']
+        item.save()
+
 def getItemFromMLAPI(item,newData):
     try:
         tokenSave = GetTokenML()
@@ -1164,7 +1169,7 @@ def getItemFromMLAPI(item,newData):
         if data is not None :
             if data["value_name"] is not None:
                 dataitem['Set'] = data["value_name"]
-        #
+        #Por si se añade otro valor
         # data = next((item for item in atrributes if item["id"] == ""), None)
         # if data is not None :
         #     if data["value_name"] is not None:
@@ -1173,7 +1178,7 @@ def getItemFromMLAPI(item,newData):
         print(json.dumps(dataitem, indent = 4,ensure_ascii=False))
         return(dataitem)
     except Exception as excep:
-        print("Error en get Item de ML "+excep)
+        print(excep)
 
 def makeexcel(items):
     try:
@@ -1205,7 +1210,7 @@ def makeexcel(items):
             print("The file does not exist")
 
     except Exception as excep:
-        print("Error para crear excel "+excep)
+        print(excep)
 
 def readexcel():
     excelRaw = pandas.read_excel('Lista total de publicaciones CI - Para cesar Santana (pruebas).xlsx')

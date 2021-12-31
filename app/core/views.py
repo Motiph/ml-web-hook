@@ -26,7 +26,7 @@ OrderItemsMercadoLibre,DocumentItems,DictionaryItems)
 
 from .xml import XMLCustomRenderer,makexml
 
-from .excel import getItemFromMLAPI,makeexcel,readexcel
+from .excel import getItemFromMLAPI,makeexcel,readexcel,UpdateItem
 
 #method to change token after 3 hours having been created
 def changeToken():
@@ -589,10 +589,13 @@ def checkchange(request):
     itemchanged = []
     for item in request.data.get('inv',None):
         try:
-            print(item['part'])
             foundItem = DictionaryItems.objects.get(long_brand=item['lineName'],number_part=item['part'])
             if (foundItem.stock != item['instk']):
+                print("parte "+item['part']+" cambio")
                 itemchanged.append(getItemFromMLAPI(foundItem,item))
+                UpdateItem(foundItem,item)
+            else:
+                print("parte "+item['part']+" sin cambio")
         except DictionaryItems.DoesNotExist:
             try:
                 foundItem = DictionaryItems.objects.get(long_brand=item['lineName'],model=item['part'])
