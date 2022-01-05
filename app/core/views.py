@@ -589,22 +589,33 @@ def checkchange(request):
     itemchanged = []
     for item in request.data.get('inv',None):
         try:
-            foundItem = DictionaryItems.objects.get(long_brand=item['lineName'],number_part=item['part'])
-            if (foundItem.stock != item['instk']):
-                print("parte "+item['part']+" cambio")
-                itemchanged.append(getItemFromMLAPI(foundItem,item))
-                UpdateItem(foundItem,item)
+            foundItem = DictionaryItems.objects.filter(long_brand=item['lineName'],number_part=item['part'])
+            if(len(foundItem) > 0):
+                for DataItem in foundItem:
+                    if (DataItem.stock != item['instk']):
+                        print("parte "+DataItem.idMercadoLibre+" cambio")
+                        itemchanged.append(getItemFromMLAPI(DataItem,item))
+                        UpdateItem(DataItem,item)
+                    else:
+                        print("parte "+item['part']+" sin cambio")
             else:
-                print("parte "+item['part']+" sin cambio")
+                foundItem = DictionaryItems.objects.filter(long_brand=item['lineName'],model=item['part'])
+                if(len(foundItem) > 0):
+                    for DataItem in foundItem:
+                        if (DataItem.stock != item['instk']):
+                            print("parte "+DataItem.idMercadoLibre+" cambio")
+                            itemchanged.append(getItemFromMLAPI(DataItem,item))
+                            UpdateItem(DataItem,item)
+                        else:
+                            print("parte "+item['part']+" sin cambio")
+                else:
+                    print("No encontrado")
         except DictionaryItems.DoesNotExist:
-            try:
-                foundItem = DictionaryItems.objects.get(long_brand=item['lineName'],model=item['part'])
-                if (foundItem.stock != item['instk']):
-                    itemchanged.append(getItemFromMLAPI(foundItem,item))
-            except DictionaryItems.DoesNotExist:
-                print("No encontrado")
-            except Exception as excep:
-                print("error en check change"+excep)
+            print("No encontrado")
+
+        except Exception as excep:
+            print(excep)
+
     makeexcel(itemchanged)
 
 class CheckStock(APIView):

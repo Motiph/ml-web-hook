@@ -5,11 +5,13 @@ env = environ.Env()
 environ.Env.read_env()
 import json
 from openpyxl import Workbook
+from openpyxl.styles import Border, Side, PatternFill, Font, GradientFill, Alignment, NamedStyle
 from datetime import datetime,timedelta
 from django.utils import timezone
 from django.core.files import File
 import os
 import pandas
+import string
 
 listTitlesExcel = (
         "Id",
@@ -440,9 +442,12 @@ def getItemFromMLAPI(item,newData):
             urlShipment = env("APIURLML")+'items/'+str(dataCleanResponse["id"])+'/shipping_options?zip_code=22454'
             responseDescription = requests.get(urlShipment, headers=headers)
             responseDescriptionJson = responseDescription.json()
-            optionShiping = next((item for item in responseDescriptionJson['options'] if item["name"] == "Estándar a domicilio"), None)
-            if optionShiping is not None:
-                dataitem['Precio Envio Gratis'] = optionShiping['list_cost']
+            try:
+                optionShiping = next((item for item in responseDescriptionJson['options'] if item["name"] == "Estándar a domicilio"), None)
+                if optionShiping is not None:
+                    dataitem['Precio Envio Gratis'] = optionShiping['list_cost']
+            except Exception as excep:
+                dataitem['Precio Envio Gratis'] = ""
         else:
             dataitem['Precio Envio Gratis'] = ""
         #Modo Envio
@@ -1180,16 +1185,77 @@ def getItemFromMLAPI(item,newData):
     except Exception as excep:
         print(excep)
 
+def makeExcelLetters():
+    abecedario = list(string.ascii_uppercase)
+    contador = 1
+    abecedarioExcel = []
+    abecedario = list(string.ascii_uppercase)
+    contador = 1
+    abecedarioExcel = []
+    while contador < 183:
+        if contador <= 26:
+            abecedarioExcel.append(abecedario[contador-1])
+        elif(contador >= 27 and contador <= 52):
+            abecedarioExcel.append('A'+abecedario[contador-27])
+        elif(contador >= 53 and contador <= 78):
+            abecedarioExcel.append('B'+abecedario[contador-53])
+        elif(contador >= 79 and contador <= 104):
+            abecedarioExcel.append('C'+abecedario[contador-79])
+        elif(contador >= 105 and contador <= 130):
+            abecedarioExcel.append('D'+abecedario[contador-105])
+        elif(contador >= 131 and contador <= 156):
+            abecedarioExcel.append('E'+abecedario[contador-131])
+        elif(contador >= 157 and contador <= 182):
+            abecedarioExcel.append('F'+abecedario[contador-157])
+        contador += 1
+    return abecedarioExcel
+        
+
+
 def makeexcel(items):
     try:
+        abecedario = makeExcelLetters()
+        #Colores
+        #A1 a T1  (1 a 20) AE1 A AH1 (31 A 34)
+        parteAmarilla = NamedStyle(name="parteAmarilla")
+        parteAmarilla.font = Font(bold=True, color="FFFFFF")
+        parteAmarilla.fill = PatternFill("solid", fgColor="FF9900")
+        #U1 A AD1 (21 A 30)
+        parteAzul = NamedStyle(name="parteAzul")
+        parteAzul.font = Font(bold=True, color="FFFFFF")
+        parteAzul.fill = PatternFill("solid", fgColor="0066CC")
+
+        #AI1 A FR1 (35 A 174)
+        parteVerde = NamedStyle(name="parteVerde")
+        parteVerde.font = Font(bold=True, color="FFFFFF")
+        parteVerde.fill = PatternFill("solid", fgColor="034A03")
+        #Columna C 
+        TituloNegrita = NamedStyle(name="TituloNegrita")
+        TituloNegrita.font = Font(bold=True)
+
         wb = Workbook()
         hoja = wb.active
+        wb.add_named_style(parteAmarilla)
+        wb.add_named_style(parteAzul)
+        wb.add_named_style(parteVerde)
+        wb.add_named_style(TituloNegrita)
         hoja.append(listTitlesExcel)
-        for changeitem in items:
+
+        for i,data in enumerate(listTitlesExcel):
+            if ((i+1) < 21) or ((i+1) >= 31 and (i+1) <= 34):
+                hoja[abecedario[i]+"1"].style = 'parteAmarilla'
+            elif((i+1)>= 21 and (i+1) <= 30):
+                hoja[abecedario[i]+"1"].style = 'parteAzul'
+            else:
+                hoja[abecedario[i]+"1"].style = 'parteVerde'
+
+        for contador,changeitem in enumerate(items):
             dataToAdd = []
-            for data in listRowExcel:
+            for i,data in enumerate(listRowExcel):
                 dataToAdd.append(changeitem.get(data,""))
             hoja.append(dataToAdd)
+            hoja["C"+str(contador+2)].style = 'TituloNegrita'
+
         actualDate = datetime.today().strftime('%d-%m-%Y-%H-%M-%S')
         nameFile ='productos'+actualDate+'.xlsx'
         wb.save(nameFile)
@@ -1215,10 +1281,13 @@ def makeexcel(items):
 def readexcel():
     excelRaw = pandas.read_excel('Lista total de publicaciones CI - Para cesar Santana (pruebas).xlsx')
     excelDict = excelRaw.to_dict('records')
+    saveCount = 0
+    notSaveCount = 0
+    error = 0
     for item in excelDict:
         try:
-            olditem = DictionaryItems.objects.get(long_brand=item['Atributo_x000D_\nMarca'], number_part = item['Atributo_x000D_\nNúmero de parte'], model = item['Atributo_x000D_\nModelo'])
-            print("no se guardo")
+            olditem = DictionaryItems.objects.get(idMercadoLibre=item['Id'],long_brand=item['Atributo_x000D_\nMarca'], number_part = item['Atributo_x000D_\nNúmero de parte'], model = item['Atributo_x000D_\nModelo'])
+            notSaveCount += 1
         except DictionaryItems.DoesNotExist:
             data = {
                 "idMercadoLibre":item['Id'],
@@ -1230,4 +1299,9 @@ def readexcel():
                 "price":str(item['Precio'])
             }
             DictionaryItems(**data).save()
-            print("se guardo")
+            saveCount += 1
+        except Exception as excep:
+            error += 1
+    results = "Se agregaron: "+str(saveCount)+" Se omitieron: "+str(notSaveCount)+" Hubo error en:"+str(error)
+    print (results)
+    return (results)
