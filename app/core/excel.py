@@ -12,6 +12,7 @@ from django.core.files import File
 import os
 import pandas
 import string
+import requests
 
 listTitlesExcel = (
         "Id",
@@ -367,10 +368,34 @@ listRowExcel = (
     "Set"
     )
 
-def UpdateItem(item,newData):
-        item.stock = newData['instk']
-        item.price = newData['cost']
-        item.save()
+def UpdateItem(Originalitem,newData):
+        Originalitem.stock = newData['instk']
+        Originalitem.price = newData['cost']
+        Originalitem.save()
+        # try:
+        #     tokenSave = GetTokenML()
+        #     #make a format to send to mercado libre API
+        #     data = {}
+        #     quantity = newData['instk']
+        #     price = newData['cost']
+        #     #if the price and quantity are none, ignore
+        #     if quantity is not None:
+        #         data["available_quantity"]= quantity
+        #     if price is not None:
+        #         data["price"]= price
+        #     item = Originalitem.idMercadoLibre
+        #     #send the request to mercado libre and show the result
+        #     headers = {'Authorization': 'Bearer '+tokenSave.access_token}
+        #     url = env("APIURLML")+'items/'+str(item)
+        #     response = requests.put(url, headers=headers,data=json.dumps(data))
+        #     responsejson = response.json()
+        #     print(responsejson)
+        #     if 'id' in responsejson:
+        #         print("Se actualizo")
+        #     else:
+        #         print("No se pudo actualizar")
+        # except Exception as excep:
+        #     print("No se pudo actualizar")
 
 def getItemFromMLAPI(item,newData):
     try:
@@ -504,9 +529,17 @@ def getItemFromMLAPI(item,newData):
             dataitem['Video'] = ""
         #Calidad de la publicación
         qualityMessages = env("APIURLML")+'items/'+str(dataCleanResponse["id"])+('/health/actions')
-        responseQuality = requests.get(qualityMessages)
+        responseQuality = requests.get(qualityMessages,headers=headers)
         responseQualityJson = responseQuality.json()
-        dataitem['Calidad de la Publicación'] = responseQualityJson.get(str("health")+" %","Desconocido")
+        print(responseQualityJson)
+        health = float(responseQualityJson.get("health",-1))
+        healthText = ""
+        print(health)
+        if health == -1:
+            healthText = "Desconocido"
+        else:
+            healthText = str(health * 100) + "%"
+        dataitem['Calidad de la Publicación'] = healthText
         #Calidad de la imagen
         #Mejoras pendientes
         acctions = {
@@ -525,14 +558,14 @@ def getItemFromMLAPI(item,newData):
             "size_chart": "informa una guía de tallas.",
             "publish": "relacionado a la publicación del ítem"
         }
-
-        publishactions = responseQualityJson.get(str("actions")+" %",[])
+        publishactions = responseQualityJson.get("actions",[])
         textActions = ""
-        for act in publishactions:
-            if act['id'] == "picture":
-                dataitem['Calidad de la Imagen'] = "verifica la calidad de las imágenes."
-            else:
-                textActions += acctions.get(act['id'],"Desconocido")
+        if publishactions is not None:
+            for act in publishactions:
+                if act['id'] == "picture":
+                    dataitem['Calidad de la Imagen'] = "verifica la calidad de las imágenes."
+                else:
+                    textActions += acctions.get(act['id'],"Desconocido") + "\r\n"
         dataitem['Mejoras pendientes'] = textActions
         #Marca
         data = next((item for item in atrributes if item["id"] == "BRAND"), None)
@@ -1210,8 +1243,6 @@ def makeExcelLetters():
         contador += 1
     return abecedarioExcel
         
-
-
 def makeexcel(items):
     try:
         abecedario = makeExcelLetters()
@@ -1249,12 +1280,14 @@ def makeexcel(items):
             else:
                 hoja[abecedario[i]+"1"].style = 'parteVerde'
 
-        for contador,changeitem in enumerate(items):
-            dataToAdd = []
-            for i,data in enumerate(listRowExcel):
-                dataToAdd.append(changeitem.get(data,""))
-            hoja.append(dataToAdd)
-            hoja["C"+str(contador+2)].style = 'TituloNegrita'
+        if items is not None:
+            for contador,changeitem in enumerate(items):
+                dataToAdd = []
+                if changeitem is not None:
+                    for i,data in enumerate(listRowExcel):
+                        dataToAdd.append(changeitem.get(data,""))
+                    hoja.append(dataToAdd)
+                    hoja["C"+str(contador+2)].style = 'TituloNegrita'
 
         actualDate = datetime.today().strftime('%d-%m-%Y-%H-%M-%S')
         nameFile ='productos'+actualDate+'.xlsx'
@@ -1274,7 +1307,6 @@ def makeexcel(items):
             os.remove(nameFile)
         else:
             print("The file does not exist")
-
     except Exception as excep:
         print(excep)
 
@@ -1286,15 +1318,27 @@ def readexcel():
     error = 0
     for item in excelDict:
         try:
-            olditem = DictionaryItems.objects.get(idMercadoLibre=item['Id'],long_brand=item['Atributo_x000D_\nMarca'], number_part = item['Atributo_x000D_\nNúmero de parte'], model = item['Atributo_x000D_\nModelo'])
+            olditem = DictionaryItems.objects.get(idMercadoLibre=item['Id'])
             notSaveCount += 1
         except DictionaryItems.DoesNotExist:
+            number_part = str(item['Atributo_x000D_\nNúmero de parte'])
+            model = str(item['Atributo_x000D_\nModelo'])
+            long_brand = str(item['Atributo_x000D_\nMarca'])
+            short_brand = long_brand[:4]
+            if (number_part == "nan"):
+                number_part = None
+            if (model == "nan"):
+                model = None
+            if (long_brand == "nan"):
+                long_brand = "No registrado"
+            if (short_brand == "nan"):
+                short_brand = "NO R"
             data = {
                 "idMercadoLibre":item['Id'],
-                "long_brand":str(item['Atributo_x000D_\nMarca']),
-                "short_brand":str(item['Atributo_x000D_\nMarca'])[:4],
-                "number_part":str(item['Atributo_x000D_\nNúmero de parte']),
-                "model":str(item['Atributo_x000D_\nModelo']),
+                "long_brand":long_brand,
+                "short_brand":short_brand,
+                "number_part":number_part,
+                "model":model,
                 "stock":str(item['Stock']),
                 "price":str(item['Precio'])
             }

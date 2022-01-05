@@ -17,8 +17,8 @@ admin.site.register(OrderItemsMercadoLibre)
 @admin.register(DictionaryItems)
 class DocumentItemsAdmin(admin.ModelAdmin):
     list_display = ("idMercadoLibre","long_brand","number_part", "model")
-    list_filter = ("stock",)
-    search_fields = ("number_part","idMercadoLibre" )
+    list_filter = ("stock","short_brand")
+    search_fields = ("number_part","model","idMercadoLibre" )
 
 @admin.register(DocumentItems)
 class DocumentItemsAdmin(admin.ModelAdmin):
