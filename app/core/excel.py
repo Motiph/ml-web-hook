@@ -12,7 +12,6 @@ from django.core.files import File
 import os
 import pandas
 import string
-import requests
 
 listTitlesExcel = (
         "Id",
