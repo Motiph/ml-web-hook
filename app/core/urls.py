@@ -11,7 +11,8 @@ from .views import (acme_webhook,
     ShowNewOrders,
     DocumentUpload,
     CheckStock,
-    ReadExcelToAdd)
+    ReadExcelToAdd,
+    SendOrderToPaceSetter)
 from django.conf.urls import url
 
 urlpatterns = [
@@ -26,5 +27,6 @@ urlpatterns = [
     path(r'createitem',CreateItemMercadoLibre.as_view()),
     path(r'upload/',DocumentUpload.as_view()),
     path(r'check/',CheckStock.as_view()),
-    path(r'readexcel/',ReadExcelToAdd.as_view())
+    path(r'readexcel/',ReadExcelToAdd.as_view()),
+    path(r'send-pacesetter/',SendOrderToPaceSetter.as_view())
     ]

@@ -494,3 +494,10 @@ class ReadExcelToAdd(APIView):
     def get(self, request, format=None):
         celeryReadExcel.delay()
         return Response("Inicio de proceso de lectura",status=status.HTTP_200_OK)
+
+
+class SendOrderToPaceSetter(APIView):
+    def post(self, request, format=None):
+        xml = request.data['xml']
+        r = requests.post('199.255.26.227:9319', data=xml)
+        return Response(r.text)
