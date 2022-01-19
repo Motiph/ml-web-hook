@@ -64,8 +64,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'webhookml',
-	'USER': 'edwyn',
-	'PASSWORD': '$Solecismo1',
+	'USER': 'postgres',
+	'PASSWORD': 'postgres',
 	'HOST': 'localhost',
 	'PORT': '',
     }

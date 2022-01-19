@@ -144,7 +144,7 @@ def celeryProcessWebhookPayload(payload):
                     #remove the # to activate pacesetter
                     #r = requests.post('http://199.255.26.227:9319', data=xmlToSend)
                     #xmlreceived = r.text
-                    xmlreceived = b'<?xml version="1.0" encoding="UTF-8" ?><ML><StockCheck><Header Src="ML" Branch="01" AcctNum="5000"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="PH8A" QtyReq="1"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="" QtyReq="1"/></StockCheck></ML>'
+                    xmlreceived = b'<?xml version="1.0" encoding="UTF-8" ?><ML><StockCheck><Header Src="ML" Branch="01" AcctNum="5000"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="PH8A" QtyReq="5"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="PH8A" QtyReq="0"/></StockCheck></ML>'
                     xmltostring = xmlreceived.decode("utf-8")
                     jsonToXML = convertxmltoJson(xmlreceived)
                     orderid.response = True
@@ -157,24 +157,26 @@ def celeryProcessWebhookPayload(payload):
                     for item in jsonToXML:
                         #make a format to send to mercado libre API
                         print(item["PartNum"])
-                        try:
-                            itemsDict = DictionaryItems.objects.filter(number_part=item['PartNum']).filter(short_brand=item['LineCode'])
-                            for itemDict in itemsDict:
-                                print(itemDict.idMercadoLibre)
-                                data = {}
-                                data["available_quantity"]= item['QtyReq']
-                                url = env("APIURLML")+'items/'+str(itemDict.idMercadoLibre)
-                                response = requests.put(url, headers=headers,data=json.dumps(data))
-                                responsejson = response.json()
-                                if 'id' in responsejson:
-                                    success += 1
-                                else:
-                                    fail += 1
-                                #update in dictionary model the stock
-                                itemsDict.stock = item['QtyReq']
-                                itemsDict.save()
-                        except DictionaryItems.DoesNotExist:
-                            fail += 1
+                        if int(item['QtyReq']) > 0:
+                            try:
+                                itemsDict = DictionaryItems.objects.filter(number_part=item['PartNum']).filter(short_brand=item['LineCode'])
+                                for itemDict in itemsDict:
+                                    print(itemDict.idMercadoLibre)
+                                    data = {}
+                                    data["available_quantity"]= item['QtyReq']
+                                    url = env("APIURLML")+'items/'+str(itemDict.idMercadoLibre)
+                                    response = requests.put(url, headers=headers,data=json.dumps(data))
+                                    responsejson = response.json()
+                                    if 'id' in responsejson:
+                                        success += 1
+                                    else:
+                                        fail += 1
+                                    #update in dictionary model the stock
+                                    objItemDict = DictionaryItems.objects.get(pk=itemDict.id)
+                                    objItemDict.stock = int(item['QtyReq'])
+                                    objItemDict.save()
+                            except DictionaryItems.DoesNotExist:
+                                fail += 1
                     return("Se actualizaron "+str(success)+" y hubo error en "+str(fail))
             #if not, only are a change in the payment
             else:
