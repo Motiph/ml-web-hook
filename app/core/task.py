@@ -5,14 +5,16 @@ import requests
 from django.utils import timezone
 from .excel import readexcel,getItemFromMLAPI,makeexcel,UpdateItem
 from .models import DictionaryItems,GetTokenML,ItemSellMercadoLibre,OrderItemsMercadoLibre
-from .xml import makexml
+from .xml import makexml,convertxmltoJson
+import json
 import environ
 env = environ.Env()
 environ.Env.read_env()
 
 @shared_task
 def celeryReadExcel():
-    readexcel()
+    message = readexcel()
+    return message
 
 @shared_task
 def celeryCheckChange(request):
@@ -48,6 +50,8 @@ def celeryCheckChange(request):
             print(excep)
 
     makeexcel(itemchanged)
+    message = "Cambiaron "+str(len(itemchanged))+"items"
+    return (message)
 
 @shared_task
 def celeryProcessWebhookPayload(payload):
@@ -62,20 +66,20 @@ def celeryProcessWebhookPayload(payload):
             responsepayments = requests.get(urlpayments, headers=headers)
             jsonresponsepayments = responsepayments.json()
             idorders = jsonresponsepayments['order']['id']
-            print(idorders)
+            #print(idorders)
             statuspayment = str(jsonresponsepayments['status'])
             #if the payment are aprroved, get the order
             if statuspayment == 'approved':
                 urlorders = env("APIURLML")+'orders/'+str(idorders)
                 responserorders  = requests.get(urlorders, headers=headers)
                 jsonresponseorders = responserorders.json()
-                print(jsonresponseorders)
+                #print(jsonresponseorders)
                 #get all items from the package
                 urlshipment = env("APIURLML")+'shipments/'+str(jsonresponseorders['shipping']['id'])
                 shipments = requests.get(urlshipment, headers=headers)
                 jsonshipments = shipments.json()
                 itemsorders = jsonshipments['shipping_items']
-                print(itemsorders)
+                #print(itemsorders)
                 orderid = None
                 packid = jsonresponseorders['pack_id']
                 firstrecord = False
@@ -106,9 +110,12 @@ def celeryProcessWebhookPayload(payload):
                         if attributes['id'] == 'BRAND':
                             brand = attributes['value_name']
                         if attributes['id'] == 'MODEL':
-                            model = attributes['value_name']
+                            if (attributes['value_name']) is not None:
+                                model = attributes['value_name']
                         if attributes['id'] == 'PART_NUMBER':
-                            part_number = attributes['value_name']
+                            if (attributes['value_name']) is not None:
+                                part_number = attributes['value_name']
+
                     newitem = {
                         "item_id_mercadolibre":item['id'],
                         "item_name_mercadolibre":item['description'],
@@ -124,23 +131,53 @@ def celeryProcessWebhookPayload(payload):
                     items.append(newitem)
                 #if the item from the order exist, ignore.
                 if firstrecord != True:
-                    print("Ya se registro antes")
+                    return("Ya se registro antes")
                 #if not, save.
                 else:
                     for item in items:
                         ItemSellMercadoLibre(**item).save()
                     orderid.sending = True
                     orderid.save()
-                    xmlreceived = b'<?xml version="1.0" encoding="UTF-8" ?><ML><StockCheck><Header Src="ML" Branch="01" AcctNum="5000"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="PH9C" QtyReq="1"/></StockCheck></ML>'
+                    xmlToSend = makexml(items)
+                    print(xmlToSend)
+                    #send to pacesetter and save xml in order, the response its fake
+                    #remove the # to activate pacesetter
+                    #r = requests.post('http://199.255.26.227:9319', data=xmlToSend)
+                    #xmlreceived = r.text
+                    xmlreceived = b'<?xml version="1.0" encoding="UTF-8" ?><ML><StockCheck><Header Src="ML" Branch="01" AcctNum="5000"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="PH8A" QtyReq="1"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="" QtyReq="1"/></StockCheck></ML>'
                     xmltostring = xmlreceived.decode("utf-8")
-                    xmlslpit = xmltostring.split('<')
-                    print(makexml(items))
+                    jsonToXML = convertxmltoJson(xmlreceived)
                     orderid.response = True
                     orderid.xmlresponse = xmltostring
                     orderid.save()
-
+                    print(type(jsonToXML))
+                    #update item in mercadolibre
+                    success = 0
+                    fail = 0
+                    for item in jsonToXML:
+                        #make a format to send to mercado libre API
+                        print(item["PartNum"])
+                        try:
+                            itemsDict = DictionaryItems.objects.filter(number_part=item['PartNum']).filter(short_brand=item['LineCode'])
+                            for itemDict in itemsDict:
+                                print(itemDict.idMercadoLibre)
+                                data = {}
+                                data["available_quantity"]= item['QtyReq']
+                                url = env("APIURLML")+'items/'+str(itemDict.idMercadoLibre)
+                                response = requests.put(url, headers=headers,data=json.dumps(data))
+                                responsejson = response.json()
+                                if 'id' in responsejson:
+                                    success += 1
+                                else:
+                                    fail += 1
+                                #update in dictionary model the stock
+                                itemsDict.stock = item['QtyReq']
+                                itemsDict.save()
+                        except DictionaryItems.DoesNotExist:
+                            fail += 1
+                    return("Se actualizaron "+str(success)+" y hubo error en "+str(fail))
             #if not, only are a change in the payment
             else:
-                print("Cambio en el pago")
+                return("Cambio en el pago")
     except Exception as excep:
         print(excep)
