@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from app.core.excel import readexcel
+from core.excel import readexcel
 
 
 class Command(BaseCommand):
