@@ -369,19 +369,15 @@ listRowExcel = (
 
 def UpdateItem(Originalitem,newData):
         Originalitem.stock = newData['instk']
-        Originalitem.price = newData['cost']
         Originalitem.save()
         # try:
         #     tokenSave = GetTokenML()
         #     #make a format to send to mercado libre API
         #     data = {}
         #     quantity = newData['instk']
-        #     price = newData['cost']
         #     #if the price and quantity are none, ignore
         #     if quantity is not None:
         #         data["available_quantity"]= quantity
-        #     if price is not None:
-        #         data["price"]= price
         #     item = Originalitem.idMercadoLibre
         #     #send the request to mercado libre and show the result
         #     headers = {'Authorization': 'Bearer '+tokenSave.access_token}
@@ -1320,12 +1316,15 @@ def readexcel():
             olditem = DictionaryItems.objects.get(idMercadoLibre=item['Id'])
             notSaveCount += 1
         except DictionaryItems.DoesNotExist:
-            number_part = str(item['Atributo_x000D_\nNúmero de parte'])
+            number_part = str(item['SKU'])
             model = str(item['Atributo_x000D_\nModelo'])
             long_brand = str(item['Atributo_x000D_\nMarca'])
             short_brand = long_brand[:4]
             if (number_part == "nan"):
-                number_part = None
+                if (str(item['Atributo_x000D_\nNúmero de parte']) != "nan"):
+                    number_part = str(item['Atributo_x000D_\nNúmero de parte'])
+                else:
+                    number_part = None
             if (model == "nan"):
                 model = None
             if (long_brand == "nan"):
