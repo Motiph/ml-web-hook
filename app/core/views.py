@@ -499,5 +499,5 @@ class ReadExcelToAdd(APIView):
 class SendOrderToPaceSetter(APIView):
     def post(self, request, format=None):
         xml = request.data['xml']
-        r = requests.post('http://199.255.26.227:9319', data=xml)
+        r = requests.post('http://131.226.252.227:9319', data=xml)
         return Response(r.text)
