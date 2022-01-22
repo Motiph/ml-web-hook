@@ -43,34 +43,35 @@ class XMLCustomRenderer(XMLRenderer):
             xml.characters(smart_text(data))
 
 
-def makexml(items):
+def makexml(items,orderid):
     try:
-        xml = '<ML><StockCheck><Header Src="'+env("SOURCE")+'" Branch="'+env("BRANCH")+'"  AcctNum="'+env("ACCTNUM")+'"></Header>'
+        xml = '<ML TransId="'+str(orderid)+'"><Order><Header src="'+env("SOURCE")+'"  account="'+env("ACCTNUM")+'"  branch="'+env("BRANCH")+'"  type="'+env("TYPE")+'"  fillflag="'+env("FILLFLAG")+'"  ponumber="'+str(orderid)+'"></Header>'
         for item in items:
+            print(str(item['item_id_mercadolibre']))
             try:
                 itemData = DictionaryItems.objects.get(idMercadoLibre = str(item['item_id_mercadolibre']))
-                xml += '<Part Desc="" LineCode="'+str(itemData.short_brand)+'" SeqNum="1" LineNum="1" PartNum="'+str(item['part_number'])+'" QtyReq="'+str(item['item_quatity'])+'"/>'
+                xml += '<Part  linecode="'+str(itemData.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
             except DictionaryItems.DoesNotExist:
                 try:
-                    itemSimilar = DictionaryItems.objects.get(long_brand = str(item['brand'])).first()
-                    xml += '<Part Desc="" LineCode="'+str(itemSimilar.short_brand)+'" SeqNum="1" LineNum="1" PartNum="'+str(item['part_number'])+'" QtyReq="'+str(item['item_quatity'])+'"/>'
+                    itemSimilar = DictionaryItems.objects.filter(long_brand = str(item['brand'])).first()
+                    xml += '<Part linecode="'+str(itemSimilar.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
                 except DictionaryItems.DoesNotExist:
-                    xml += '<Part Desc="" LineCode="nan" SeqNum="1" LineNum="1" PartNum="'+str(item['part_number'])+'" QtyReq="'+str(item['item_quatity'])+'"/>'
-        xml += '</StockCheck></ML>'
+                    xml += '<Part linecode="nan" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
+        xml += '<comment type="'+env("TYPECOMENT")+'" text="Esto es enviado desde Mercado Libre"></comment></Order></ML>'
         rootxml = etree.fromstring(xml)
         xmlready = b'<?xml version="1.0" encoding="UTF-8" ?>' + etree.tostring(rootxml)
         return (xmlready.decode("utf-8"))
     except Exception as excep:
-        print("Error en hacer excel")
+        print(excep)
 
 def convertxmltoJson(xmlreceived):
     try:
         root = etree.fromstring(xmlreceived)
         JsonBuild = []
         count = 0
-        for StockCheck in root:
-            for element in StockCheck:
-                if (element.tag == 'Part'):
+        for orderconf in root:
+            for element in orderconf:
+                if (element.tag == 'part'):
                     newjson = str(element.attrib).replace('{','').replace('}','').split(', ')
                     PartJson = {}
                     for attribute in newjson:
@@ -80,4 +81,4 @@ def convertxmltoJson(xmlreceived):
                     count += 1
         return JsonBuild
     except Exception as excep:
-        print("ERROR EN XML A JSON")
+        print(excep)

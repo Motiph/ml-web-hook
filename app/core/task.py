@@ -138,13 +138,13 @@ def celeryProcessWebhookPayload(payload):
                         ItemSellMercadoLibre(**item).save()
                     orderid.sending = True
                     orderid.save()
-                    xmlToSend = makexml(items)
+                    xmlToSend = makexml(items,orderid)
                     print(xmlToSend)
                     #send to pacesetter and save xml in order, the response its fake
                     #remove the # to activate pacesetter
-                    #r = requests.post('http://199.255.26.227:9319', data=xmlToSend)
+                    #r = requests.post('http://131.226.252.227:9319', data=xmlToSend)
                     #xmlreceived = r.text
-                    xmlreceived = b'<?xml version="1.0" encoding="UTF-8" ?><ML><StockCheck><Header Src="ML" Branch="01" AcctNum="5000"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="PH8A" QtyReq="5"/><Part Desc="" LineCode="Fram" SeqNum="1" LineNum="1" PartNum="PH8A" QtyReq="0"/></StockCheck></ML>'
+                    xmlreceived = b'<?xml version= \"1.0\"?>\r\n<ML TransId= \"MLM937625594\"><orderconf><header account= \"900\" branch= \"01\" errcode= \"\" orderdate= \"2022-01-21 13:58:49 MST\" orderno= \"220121135808\" ponumber= \"99994\" state= \"success\" type= \"Normal\"><routing /></header><part core= \"0\" cost= \"307.06\" errcode= \"success\" errmsg= \"success\" linecode= \"CEN\" list= \"315.41\" partno= \"102.00300\" qtyavail= \"2\" qtyreq= \"1\" qtysup= \"1\" /></orderconf></ML>'
                     xmltostring = xmlreceived.decode("utf-8")
                     jsonToXML = convertxmltoJson(xmlreceived)
                     orderid.response = True
@@ -156,14 +156,14 @@ def celeryProcessWebhookPayload(payload):
                     fail = 0
                     for item in jsonToXML:
                         #make a format to send to mercado libre API
-                        print(item["PartNum"])
-                        if int(item['QtyReq']) > 0:
+                        print(item["partno"])
+                        if int(item['qtyreq']) > 0:
                             try:
-                                itemsDict = DictionaryItems.objects.filter(number_part=item['PartNum']).filter(short_brand=item['LineCode'])
+                                itemsDict = DictionaryItems.objects.filter(number_part=item['partno'],short_brand=item['linecode'])
                                 for itemDict in itemsDict:
                                     print(itemDict.idMercadoLibre)
                                     data = {}
-                                    data["available_quantity"]= item['QtyReq']
+                                    data["available_quantity"]= int(item['qtyavail']) - int(item['qtyreq'])
                                     url = env("APIURLML")+'items/'+str(itemDict.idMercadoLibre)
                                     response = requests.put(url, headers=headers,data=json.dumps(data))
                                     responsejson = response.json()
@@ -173,10 +173,12 @@ def celeryProcessWebhookPayload(payload):
                                         fail += 1
                                     #update in dictionary model the stock
                                     objItemDict = DictionaryItems.objects.get(pk=itemDict.id)
-                                    objItemDict.stock = int(item['QtyReq'])
+                                    objItemDict.stock = int(item['qtyavail']) - int(item['qtyreq'])
                                     objItemDict.save()
                             except DictionaryItems.DoesNotExist:
                                 fail += 1
+                        else:
+                            print(item["partno"]+"menor a cero")
                     return("Se actualizaron "+str(success)+" y hubo error en "+str(fail))
             #if not, only are a change in the payment
             else:
