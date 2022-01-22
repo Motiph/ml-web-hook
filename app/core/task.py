@@ -142,9 +142,9 @@ def celeryProcessWebhookPayload(payload):
                     print(xmlToSend)
                     #send to pacesetter and save xml in order, the response its fake
                     #remove the # to activate pacesetter
-                    #r = requests.post('http://131.226.252.227:9319', data=xmlToSend)
-                    #xmlreceived = r.text
-                    xmlreceived = b'<?xml version= \"1.0\"?>\r\n<ML TransId= \"MLM937625594\"><orderconf><header account= \"900\" branch= \"01\" errcode= \"\" orderdate= \"2022-01-21 13:58:49 MST\" orderno= \"220121135808\" ponumber= \"99994\" state= \"success\" type= \"Normal\"><routing /></header><part core= \"0\" cost= \"307.06\" errcode= \"success\" errmsg= \"success\" linecode= \"CEN\" list= \"315.41\" partno= \"102.00300\" qtyavail= \"2\" qtyreq= \"1\" qtysup= \"1\" /></orderconf></ML>'
+                    r = requests.post('http://131.226.252.227:9319', data=xmlToSend)
+                    xmlreceived = r.text
+                    #xmlreceived = b'<?xml version= \"1.0\"?>\r\n<ML TransId= \"MLM937625594\"><orderconf><header account= \"900\" branch= \"01\" errcode= \"\" orderdate= \"2022-01-21 13:58:49 MST\" orderno= \"220121135808\" ponumber= \"99994\" state= \"success\" type= \"Normal\"><routing /></header><part core= \"0\" cost= \"307.06\" errcode= \"success\" errmsg= \"success\" linecode= \"CEN\" list= \"315.41\" partno= \"102.00300\" qtyavail= \"2\" qtyreq= \"1\" qtysup= \"1\" /></orderconf></ML>'
                     xmltostring = xmlreceived.decode("utf-8")
                     jsonToXML = convertxmltoJson(xmlreceived)
                     orderid.response = True
