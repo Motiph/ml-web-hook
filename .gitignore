@@ -2,5 +2,5 @@ webhook/
 media/
 db.sqlite3
 .env.dev
-Lista total de publicaciones CI - Para cesar Santana (pruebas).xlsx
+*.xlsx
 app/core/prueba.py

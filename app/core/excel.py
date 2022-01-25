@@ -1306,7 +1306,7 @@ def makeexcel(items):
         print(excep)
 
 def readexcel():
-    excelRaw = pandas.read_excel('Lista total de publicaciones CI - Para cesar Santana (pruebas).xlsx')
+    excelRaw = pandas.read_excel('data.xlsx')
     excelDict = excelRaw.to_dict('records')
     saveCount = 0
     notSaveCount = 0
