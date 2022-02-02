@@ -1311,11 +1311,13 @@ def readexcel():
     saveCount = 0
     notSaveCount = 0
     error = 0
+    print('Iniciando read_excel')
     for item in excelDict:
         try:
             olditem = DictionaryItems.objects.get(idMercadoLibre=item['Id'])
             notSaveCount += 1
         except DictionaryItems.DoesNotExist:
+            print(str(item['SKU']))
             number_part = str(item['SKU'])
             model = str(item['Atributo_x000D_\nModelo'])
             long_brand = str(item['Atributo_x000D_\nMarca'])
@@ -1343,6 +1345,7 @@ def readexcel():
             DictionaryItems(**data).save()
             saveCount += 1
         except Exception as excep:
+            print(excep)
             error += 1
     results = "Se agregaron: "+str(saveCount)+" Se omitieron: "+str(notSaveCount)+" Hubo error en:"+str(error)
     print (results)

@@ -60,17 +60,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'webhookml.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'webhookml',
+# 	'USER': 'edwyn',
+# 	'PASSWORD': '$Solecismo1',
+# 	'HOST': 'localhost',
+# 	'PORT': '',
+#     }
+# }
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'webhookml',
-	'USER': 'edwyn',
-	'PASSWORD': '$Solecismo1',
+	'USER': 'postgres',
+	'PASSWORD': 'Solecismo1',
 	'HOST': 'localhost',
 	'PORT': '',
     }
 }
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

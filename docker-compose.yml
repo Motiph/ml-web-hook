@@ -4,26 +4,27 @@ services:
   web:
     build: .
     container_name: test_deploy_web
-    command: gunicorn webhookml.wsgi:application --bind 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
+    # command: gunicorn webhookml.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - ./app:/app/
     expose:
       - 8000
     env_file:
       - ./.env
-  nginx:
-    build: ./nginx
-    container_name: test_deploy_nginx
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    depends_on:
-      - web
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
+  # nginx:
+  #   build: ./nginx
+  #   container_name: test_deploy_nginx
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   volumes:
+  #     - ./data/certbot/conf:/etc/letsencrypt
+  #     - ./data/certbot/www:/var/www/certbot
+  #   depends_on:
+  #     - web
+  # certbot:
+  #   image: certbot/certbot
+  #   volumes:
+  #     - ./data/certbot/conf:/etc/letsencrypt
+  #     - ./data/certbot/www:/var/www/certbot
