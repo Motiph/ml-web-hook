@@ -370,27 +370,27 @@ listRowExcel = (
 def UpdateItem(Originalitem,newData):
         Originalitem.stock = newData['instk']
         Originalitem.save()
-        # try:
-        #     tokenSave = GetTokenML()
-        #     #make a format to send to mercado libre API
-        #     data = {}
-        #     quantity = newData['instk']
-        #     #if the price and quantity are none, ignore
-        #     if quantity is not None:
-        #         data["available_quantity"]= quantity
-        #     item = Originalitem.idMercadoLibre
-        #     #send the request to mercado libre and show the result
-        #     headers = {'Authorization': 'Bearer '+tokenSave.access_token}
-        #     url = env("APIURLML")+'items/'+str(item)
-        #     response = requests.put(url, headers=headers,data=json.dumps(data))
-        #     responsejson = response.json()
-        #     print(responsejson)
-        #     if 'id' in responsejson:
-        #         print("Se actualizo")
-        #     else:
-        #         print("No se pudo actualizar")
-        # except Exception as excep:
-        #     print("No se pudo actualizar")
+        try:
+            tokenSave = GetTokenML()
+            #make a format to send to mercado libre API
+            data = {}
+            quantity = newData['instk']
+            #if the price and quantity are none, ignore
+            if quantity is not None:
+                data["available_quantity"]= quantity
+            item = Originalitem.idMercadoLibre
+            #send the request to mercado libre and show the result
+            headers = {'Authorization': 'Bearer '+tokenSave.access_token}
+            url = env("APIURLML")+'items/'+str(item)
+            response = requests.put(url, headers=headers,data=json.dumps(data))
+            responsejson = response.json()
+            print(responsejson)
+            if 'id' in responsejson:
+                print("Se actualizo")
+            else:
+                print("No se pudo actualizar")
+        except Exception as excep:
+            print("No se pudo actualizar")
 
 def getItemFromMLAPI(item,newData):
     try:
