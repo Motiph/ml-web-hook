@@ -163,10 +163,11 @@ def process_webhook_payload(payload):
                 else:
                     for item in items:
                         ItemSellMercadoLibre(**item).save()
-                    orderid.sending = True
-                    orderid.save()
                     xmlToSend = makexml(items,orderid)
                     print(xmlToSend)
+                    orderid.sending = True
+                    orderid.xmlsending = xmlToSend
+                    orderid.save()
                     #send to pacesetter and save xml in order
                     r = requests.post('http://131.226.252.227:9319', data=xmlToSend)
                     xmlreceived = r.text

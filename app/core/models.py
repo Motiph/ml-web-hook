@@ -72,9 +72,10 @@ def GetTokenML():
 class OrderItemsMercadoLibre(models.Model):
     pack_id_mercadolibre = models.CharField(max_length=70)
     sending = models.BooleanField(default=False)
+    xmlsending = models.TextField(null=True,help_text="XML enviado a Pacesetter.")
     received_at = models.DateTimeField()
     response = models.BooleanField(default=False)
-    xmlresponse = models.TextField(null=True,help_text="Texto Json del evento.")
+    xmlresponse = models.TextField(null=True,help_text="XML recibido de Pacesetter")
 
     def __str__(self):
         return str(self.pack_id_mercadolibre)
