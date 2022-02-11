@@ -45,19 +45,20 @@ class XMLCustomRenderer(XMLRenderer):
 
 def makexml(items,orderid):
     try:
-        xml = '<ML TransId="'+str(orderid)+'"><Order><Header src="'+env("SOURCE")+'"  account="'+env("ACCTNUM")+'"  branch="'+env("BRANCH")+'"  type="'+env("TYPE")+'"  fillflag="'+env("FILLFLAG")+'"  ponumber="'+str(orderid)+'"></Header>'
+        xml = '<ML TransId="'+str(orderid)+'"><Order><header src="'+env("SOURCE")+'"  account="'+env("ACCTNUM")+'"  branch="'+env("BRANCH")+'"  type="'+env("TYPE")+'"  fillflag="'+env("FILLFLAG")+'"  ponumber="'+str(orderid)+'"></header>'
         for item in items:
             print(str(item['item_id_mercadolibre']))
             try:
                 itemData = DictionaryItems.objects.get(idMercadoLibre = str(item['item_id_mercadolibre']))
-                xml += '<Part  linecode="'+str(itemData.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
+                xml += '<part  linecode="'+str(itemData.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
             except DictionaryItems.DoesNotExist:
                 try:
                     itemSimilar = DictionaryItems.objects.filter(long_brand = str(item['brand'])).first()
-                    xml += '<Part linecode="'+str(itemSimilar.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
+                    xml += '<part linecode="'+str(itemSimilar.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
                 except DictionaryItems.DoesNotExist:
-                    xml += '<Part linecode="nan" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
-        xml += '<comment type="'+env("TYPECOMENT")+'" text="Esto es enviado desde Mercado Libre"></comment></Order></ML>'
+                    xml += '<part linecode="nan" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
+        #When this are ready, remove TEST
+        xml += '<comment type="'+env("TYPECOMENT")+'" text="Esto es enviado desde Mercado Libre TEST"></comment></Order></ML>'
         rootxml = etree.fromstring(xml)
         xmlready = b'<?xml version="1.0" encoding="UTF-8" ?>' + etree.tostring(rootxml)
         return (xmlready.decode("utf-8"))
