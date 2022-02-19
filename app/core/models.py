@@ -131,3 +131,10 @@ class DictionaryItems(models.Model):
     
     def __str__(self):
         return str(self.idMercadoLibre)
+
+class DictionaryBrands(models.Model):
+    long_brand = models.CharField(max_length=200,verbose_name="Nombre completo de la marca")
+    short_brand = models.CharField(max_length=100,verbose_name="Nombre corto de la marca")
+
+    def __str__(self):
+        return str(self.short_brand)

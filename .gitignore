@@ -4,3 +4,4 @@ db.sqlite3
 .env.dev
 *.xlsx
 app/core/prueba.py
+app/data.json
