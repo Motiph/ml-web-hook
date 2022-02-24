@@ -58,7 +58,7 @@ def makexml(items,orderid):
                 except DictionaryItems.DoesNotExist:
                     xml += '<part linecode="nan" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
         #When this are ready, remove TEST
-        xml += '<comment type="'+env("TYPECOMENT")+'" text="Esto es enviado desde Mercado Libre TEST"></comment></Order></ML>'
+        xml += '<comment type="'+env("TYPECOMENT")+'" text="Esto es enviado desde Mercado Libre"></comment></Order></ML>'
         rootxml = etree.fromstring(xml)
         xmlready = b'<?xml version="1.0" encoding="UTF-8" ?>' + etree.tostring(rootxml)
         return (xmlready.decode("utf-8"))
