@@ -13,6 +13,7 @@ class Command(BaseCommand):
 
         for i, row in enumerate(sheet.iter_rows(values_only=True)):
             try:
-                brand = DictionaryItems.objects.filter(long_brand=row[0].lower()).update(short_brand=row[1])
+                print(row[0].lower())
+                DictionaryItems.objects.filter(long_brand=row[0].lower()).update(short_brand=row[1])
             except DictionaryItems.DoesNotExist:
                 pass
