@@ -27,7 +27,8 @@ OrderItemsMercadoLibre,DocumentItems,DictionaryItems)
 from .xml import XMLCustomRenderer,makexml,convertxmltoJson
 
 
-from .task import celeryReadExcel,celeryCheckChange
+#from .task import celeryReadExcel,celeryCheckChange
+from .task import celeryReadExcel
 
 #method to change token after 3 hours having been created
 def changeToken():
@@ -618,12 +619,12 @@ class DocumentUpload(APIView):
         DocumentItems(**data).save()
         return Response(status=status.HTTP_201_CREATED)
 
-class CheckStock(APIView):
-    def post(self, request,format=None):
-        changeToken()
-        json_data = json.loads(str(request.body, encoding='utf-8'))
-        celeryCheckChange.delay(json_data)
-        return Response("Inicio de proceso de creación",status=status.HTTP_200_OK)
+# class CheckStock(APIView):
+#     def post(self, request,format=None):
+#         changeToken()
+#         json_data = json.loads(str(request.body, encoding='utf-8'))
+#         celeryCheckChange.delay(json_data)
+#         return Response("Inicio de proceso de creación",status=status.HTTP_200_OK)
 
 class ReadExcelToAdd(APIView):
     def get(self, request, format=None):

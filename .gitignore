@@ -5,3 +5,4 @@ db.sqlite3
 *.xlsx
 app/core/prueba.py
 app/data.json
+app/update.json
