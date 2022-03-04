@@ -50,13 +50,13 @@ def makexml(items,orderid):
             print(str(item['item_id_mercadolibre']))
             try:
                 itemData = DictionaryItems.objects.get(idMercadoLibre = str(item['item_id_mercadolibre']))
-                xml += '<part  linecode="'+str(itemData.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
+                xml += '<part  linecode="'+str(itemData.short_brand)+'" partno="'+str(itemData.number_part)+'" qtyreq="'+str(item['item_quatity'])+'"/>'
             except DictionaryItems.DoesNotExist:
                 try:
                     itemSimilar = DictionaryItems.objects.filter(long_brand = str(item['brand'])).first()
                     xml += '<part linecode="'+str(itemSimilar.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
                 except DictionaryItems.DoesNotExist:
-                    xml += '<part linecode="nan" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
+                    pass
         #When this are ready, remove TEST
         xml += '<comment type="'+env("TYPECOMENT")+'" text="Esto es enviado desde Mercado Libre"></comment></Order></ML>'
         rootxml = etree.fromstring(xml)
