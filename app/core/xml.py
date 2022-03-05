@@ -47,16 +47,13 @@ def makexml(items,orderid):
     try:
         xml = '<ML TransId="'+str(orderid)+'"><Order><header src="'+env("SOURCE")+'"  account="'+env("ACCTNUM")+'"  branch="'+env("BRANCH")+'"  type="'+env("TYPE")+'"  fillflag="'+env("FILLFLAG")+'"  ponumber="'+str(orderid)+'"></header>'
         for item in items:
-            print(str(item['item_id_mercadolibre']))
+            #print(str(item['item_id_mercadolibre']))
             try:
-                itemData = DictionaryItems.objects.get(idMercadoLibre = str(item['item_id_mercadolibre']))
+                itemData = DictionaryItems.objects.filter(idMercadoLibre__startswith = str(item['item_id_mercadolibre'])).first()
+                print(itemData)
                 xml += '<part  linecode="'+str(itemData.short_brand)+'" partno="'+str(itemData.number_part)+'" qtyreq="'+str(item['item_quatity'])+'"/>'
             except DictionaryItems.DoesNotExist:
-                try:
-                    itemSimilar = DictionaryItems.objects.filter(long_brand = str(item['brand'])).first()
-                    xml += '<part linecode="'+str(itemSimilar.short_brand)+'" partno="'+str(item['part_number'])+'" qtyreq="'+str(item['item_quatity'])+'"/>'
-                except DictionaryItems.DoesNotExist:
-                    pass
+                pass
         #When this are ready, remove TEST
         xml += '<comment type="'+env("TYPECOMENT")+'" text="Esto es enviado desde Mercado Libre"></comment></Order></ML>'
         rootxml = etree.fromstring(xml)

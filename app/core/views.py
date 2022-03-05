@@ -171,35 +171,31 @@ def process_webhook_payload(payload):
                     orderid.save()
                     #send to pacesetter and save xml in order
                     r = requests.post('http://131.226.252.227:9319', data=xmlToSend)
-                    xmlreceived = r.text
-                    xmltostring = xmlreceived.decode("utf-8")
-                    jsonToXML = convertxmltoJson(xmlreceived)
-                    orderid.response = True
-                    orderid.xmlresponse = xmltostring
-                    orderid.save()
-                    print(type(jsonToXML))
                     #update item in mercadolibre
                     success = 0
                     fail = 0
-                    for item in jsonToXML:
+                    for item in items:
+                        itemSearch = DictionaryItems.objects.filter(idMercadoLibre__startswith = str(item['item_id_mercadolibre'])).first()
                         #make a format to send to mercado libre API
-                        print(item["partno"])
-                        if int(item['qtyreq']) > 0:
+                        print(item["item_id_mercadolibre"])
+                        if int(item['item_quatity']) > 0:
                             try:
-                                itemsDict = DictionaryItems.objects.filter(number_part=item['partno'],short_brand=item['linecode'])
-
+                                itemsDict = DictionaryItems.objects.filter(number_part=itemSearch.number_part,short_brand=itemSearch.short_brand)
                                 for itemDict in itemsDict:
+                                    available = int(itemDict.stock) - int(item['item_quatity'])
+                                    if available <= 0:
+                                        available = 0
                                     print(itemDict.idMercadoLibre)
                                     data = {}
-                                    data["available_quantity"]= int(item['qtyavail']) - int(item['qtyreq'])
-                                    url = env("APIURLML")+'items/'+str(itemDict.idMercadoLibre)
+                                    data["available_quantity"]= available
+                                    url = env("APIURLML")+'items/'+ str(item['item_id_mercadolibre'])
                                     response = requests.put(url, headers=headers,data=json.dumps(data))
                                     responsejson = response.json()
                                     if 'id' in responsejson:
                                         success += 1
                                         #update in dictionary model the stock
                                         objItemDict = DictionaryItems.objects.get(pk=itemDict.id)
-                                        objItemDict.stock = int(item['qtyavail']) - int(item['qtyreq'])
+                                        objItemDict.stock = available
                                         objItemDict.save()
                                     else:
                                         fail += 1
@@ -207,6 +203,9 @@ def process_webhook_payload(payload):
                                 fail += 1
                         else:
                             print(item["partno"]+"menor a cero")
+                    orderid.response = True
+                    orderid.xmlresponse = "Se actualizaron "+str(success)+" y hubo error en "+str(fail)
+                    orderid.save()
                     return("Se actualizaron "+str(success)+" y hubo error en "+str(fail))
             #if not, only are a change in the payment
             else:
